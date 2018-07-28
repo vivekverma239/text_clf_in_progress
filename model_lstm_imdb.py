@@ -230,7 +230,6 @@ if __name__ == '__main__':
         x_test, y_test = data_processor.process_test_file( 'data/imdb/test.csv',contains_label=True,header=0)
         # embedding = data_processor.get_embedding(config['embed_size'])
         # print('Embedding Shape',embedding.shape)
-    print('Train Data Shape',data.shape,labels.shape)
     trainer = Trainer(config,x_train,y_train,embedding=None)
     trainer.train()
     trainer.load_best_model()
