@@ -21,9 +21,9 @@ def convert_to_csv(path,out_file):
     print('Processing Complete.')
 
 if __name__ == '__main__':
-    TRAIN_PATH='aclImdb/train/'
-    TEST_PATH='aclImdb/test/'
-    TRAIN_CSV_FILE='train.csv'
-    TEST_CSV_FILE='test.csv'
+    TRAIN_PATH='data/imdb/aclImdb/train/'
+    TEST_PATH='data/imdb/aclImdb/test/'
+    TRAIN_CSV_FILE='data/imdb/train.csv'
+    TEST_CSV_FILE='data/imdb/test.csv'
     convert_to_csv(TRAIN_PATH,TRAIN_CSV_FILE)
     convert_to_csv(TEST_PATH,TEST_CSV_FILE)
