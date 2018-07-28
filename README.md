@@ -1,5 +1,5 @@
-# IMDB Sentiment Analysis Benchmarking
-The Aim of this repository is to establish a benchmark for IMDB sentiment analysis dataset. In future it can be extended to other datasets/
+# IMDB Sentiment Analysis Benchmarks
+The Aim of this repository is to establish a benchmark for IMDB sentiment analysis dataset. In future it can be extended to other datasets.
 
 The following models are implemented:
   - TF-IDF with Naive Bayes Classifier
