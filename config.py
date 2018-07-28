@@ -6,7 +6,7 @@ config = {
     'max_max_epoch':40,
     'max_grad_norm': 5,
     'num_layers': 1,
-    'num_steps': 300,
+    'num_steps': 200,
     'embed_size': 300,
     'hidden_size':300,
     'keep_prob': 0.5,

@@ -14,6 +14,9 @@ from utils import DataProcessor
 from sklearn.metrics import classification_report, accuracy_score
 import numpy as np
 from encoder import LSTMEncoderWithEmbedding, CNNEncoderWithEmbedding
+from keras.layers import Dense, Embedding
+from keras.layers import LSTM, GRU, CuDNNLSTM, CuDNNGRU, Dropout
+
 from tqdm import tqdm, trange
 from time import sleep
 import config
@@ -35,14 +38,16 @@ class LSTMModel(object):
     self.weight_decay   = config['weight_decay']
 
     #
-    outputs = LSTMEncoderWithEmbedding(self._input,self.embed_size,self.size,\
-                             config['vocab_size'],self.num_steps,\
-                             self.keep_prob,embedding=pretrained_embedding,\
-                             num_layers=config['num_layers'],\
-                             variational_dropout=True,\
-                             combine_mode='last').get_output()
+    # outputs = LSTMEncoderWithEmbedding(self._input,self.embed_size,self.size,\
+    #                          config['vocab_size'],self.num_steps,\
+    #                          self.keep_prob,embedding=pretrained_embedding,\
+    #                          num_layers=config['num_layers'],\
+    #                          variational_dropout=True,\
+    #                          combine_mode='last').get_output()
 
-
+    embed = Embedding(config['vocab_size']+1, self.embed_size)(self._input)
+    output = CuDNNLSTM(self.size)(embed)
+    outputs = Dropout(0.2)(output)
     # outputs = tf.contrib.layers.fully_connected(outputs,self.size)
     # outputs = tf.nn.dropout(outputs,keep_prob=self.keep_prob)
     softmax_w = tf.get_variable("softmax_w", [self.size, self.num_classes], dtype=tf.float32)

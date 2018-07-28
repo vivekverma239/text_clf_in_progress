@@ -44,6 +44,7 @@ class LSTMEncoderWithEmbedding(object):
           return tf.contrib.rnn.LSTMCell(
               input_size, forget_bias=0.0, state_is_tuple=True,
               reuse=tf.get_variable_scope().reuse)
+
         def attn_cell(input_size):
           return tf.contrib.rnn.DropoutWrapper(
               lstm_cell(input_size), output_keep_prob=keep_prob,variational_recurrent=True,dtype=tf.float32)
