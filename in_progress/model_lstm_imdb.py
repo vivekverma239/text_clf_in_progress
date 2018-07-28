@@ -16,7 +16,8 @@ import numpy as np
 from encoder import LSTMEncoderWithEmbedding, CNNEncoderWithEmbedding
 from tqdm import tqdm, trange
 from time import sleep
-
+import config
+from config import *
 
 class LSTMModel(object):
 
@@ -202,7 +203,7 @@ if __name__ == '__main__':
     #     'save_path': 'checkpoint/imdb/'
     # }
 
-    from config import *
+
 
     data_path = 'data/imdb/train.csv'
     data_processor = DataProcessor(data_path,vocab_size=config['vocab_size'],\
