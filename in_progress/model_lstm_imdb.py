@@ -202,8 +202,8 @@ if __name__ == '__main__':
     #     'save_path': 'checkpoint/imdb/'
     # }
 
-    from config import config
-    
+    from config import *
+
     data_path = 'data/imdb/train.csv'
     data_processor = DataProcessor(data_path,vocab_size=config['vocab_size'],\
                     seperator=',',max_seq_len=config['num_steps'],header=0,reverse=True)
