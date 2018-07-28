@@ -10,7 +10,7 @@ from __future__ import print_function
 from utils import DataProcessor
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
-from utils import DataProcessor
+from utils import DataProcessor, imdb_for_library
 from sklearn.metrics import classification_report, accuracy_score
 import numpy as np
 from encoder import LSTMEncoderWithEmbedding, CNNEncoderWithEmbedding
@@ -21,6 +21,8 @@ from tqdm import tqdm, trange
 from time import sleep
 import config
 from config import *
+import sys
+
 
 class LSTMModel(object):
 
@@ -47,8 +49,15 @@ class LSTMModel(object):
     #                          combine_mode='last').get_output()
 
     embed = Embedding(config['vocab_size']+1, self.embed_size)(self._input)
+    outputs = tf.nn.dropout(embed,keep_prob=self.keep_prob)
     output = CuDNNLSTM(self.size)(embed)
     outputs = tf.nn.dropout(output,keep_prob=self.keep_prob)
+
+    embed_avg = tf.reduce_mean(embed,axis=1)
+    # embed_max = tf.reduce_max(embed,axis=1)
+    # embed_min = tf.reduce_min(embed,axis=1)
+    # outputs = tf.concat([outputs,embed_avg,embed_min,embed_max],axis=-1)
+    outputs = tf.concat([outputs,embed_avg],axis=-1)
     # outputs = tf.contrib.layers.fully_connected(outputs,self.size)
     # outputs = tf.nn.dropout(outputs,keep_prob=self.keep_prob)
     # softmax_w = tf.get_variable("softmax_w", [self.size, self.num_classes], dtype=tf.float32)
@@ -211,18 +220,19 @@ if __name__ == '__main__':
 
 
 
-    data_path = 'data/imdb/train.csv'
-    data_processor = DataProcessor(data_path,vocab_size=config['vocab_size'],\
-                    seperator=',',max_seq_len=config['num_steps'],header=0,reverse=True)
-    data , labels    = data_processor.get_training_data()
+    if len(sys.argv) ==2 and  sys.argv[1] == 'std':
+        x_train, x_test, y_train, y_test = imdb_for_library(seq_len=seq_len, max_features=max_features)
+    else:
+        data_path = 'data/imdb/train.csv'
+        data_processor = DataProcessor(data_path,vocab_size=config['vocab_size'],\
+                        seperator=',',max_seq_len=config['num_steps'],header=0,reverse=True)
+        x_train , y_train    = data_processor.get_training_data()
+        x_test, y_test = data_processor.process_test_file( 'data/imdb/test.csv',contains_label=True,header=0)
+        # embedding = data_processor.get_embedding(config['embed_size'])
+        # print('Embedding Shape',embedding.shape)
     print('Train Data Shape',data.shape,labels.shape)
-    # embedding = data_processor.get_embedding(config['embed_size'])
-    # print('Embedding Shape',embedding.shape)
-    test_data, test_labels = data_processor.process_test_file( 'data/imdb/test.csv',contains_label=True,header=0)
-    trainer = Trainer(config,data,labels,embedding=None)
-    # trainer.X_test = test_data
-    # trainer.y_test = test_labels
+    trainer = Trainer(config,x_train,y_train,embedding=None)
     trainer.train()
     trainer.load_best_model()
-    pred = trainer.predict(test_data)
-    print(classification_report(y_true=test_labels,y_pred=pred))
+    pred = trainer.predict(x_test)
+    print(classification_report(y_true=y_test,y_pred=pred))
