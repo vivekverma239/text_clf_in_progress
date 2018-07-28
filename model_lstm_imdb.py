@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split
 from utils import DataProcessor, imdb_for_library
 from sklearn.metrics import classification_report, accuracy_score
 import numpy as np
-from encoder import LSTMEncoderWithEmbedding, CNNEncoderWithEmbedding
+# from encoder import LSTMEncoderWithEmbedding, CNNEncoderWithEmbedding
 from keras.layers import Dense, Embedding
 from keras.layers import LSTM, GRU, CuDNNLSTM, CuDNNGRU, Dropout
 
