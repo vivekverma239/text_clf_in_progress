@@ -6,4 +6,3 @@ data/*
 saved_models/*
 checkpoint
 *.tfrecord*
-in_progress
