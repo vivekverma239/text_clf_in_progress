@@ -165,7 +165,6 @@ class Trainer(object):
             temp_cost.append(ops_out[-2])
             temp_acc.append( ops_out[-1] )
             acc = accuracy_score(y_pred=temp_acc[-1],y_true=y_sub)
-            tqdm.write('Accuracy {} , Loss {}'.format(acc,temp_cost[-1]))
         cost = np.mean(temp_cost)
         # print(classification_report(y_pred=self.predict(X),y_true=y))
         accuracy = accuracy_score(y_pred=np.concatenate(temp_acc),y_true=y)
