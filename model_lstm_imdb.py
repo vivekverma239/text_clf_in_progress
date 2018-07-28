@@ -118,7 +118,7 @@ class LSTMModel(object):
 class Trainer(object):
     def __init__(self,config,X,y,embedding):
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
-                                data, labels, test_size=0.5, random_state=12,shuffle=True)
+                                X, y, test_size=0.5, random_state=12,shuffle=True)
 
         self.keep_prob = config['keep_prob']
         self.batch_size = config['batch_size']
