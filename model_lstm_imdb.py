@@ -221,7 +221,7 @@ if __name__ == '__main__':
 
 
     if len(sys.argv) ==2 and  sys.argv[1] == 'std':
-        x_train, x_test, y_train, y_test = imdb_for_library(seq_len=seq_len, max_features=max_features)
+        x_train, x_test, y_train, y_test = imdb_for_library(seq_len=config['num_steps'], max_features=config['vocab_size'])
     else:
         data_path = 'data/imdb/train.csv'
         data_processor = DataProcessor(data_path,vocab_size=config['vocab_size'],\
