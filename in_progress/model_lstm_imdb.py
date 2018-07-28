@@ -37,6 +37,7 @@ class LSTMModel(object):
     self.combine_mode   = config['combine_mode']
     self.weight_decay   = config['weight_decay']
 
+
     #
     # outputs = LSTMEncoderWithEmbedding(self._input,self.embed_size,self.size,\
     #                          config['vocab_size'],self.num_steps,\
@@ -47,7 +48,7 @@ class LSTMModel(object):
 
     embed = Embedding(config['vocab_size']+1, self.embed_size)(self._input)
     output = CuDNNLSTM(self.size)(embed)
-    outputs = Dropout(0.25)(output)
+    outputs = Dropout(1-self.keep_prob)(output)
     # outputs = tf.contrib.layers.fully_connected(outputs,self.size)
     # outputs = tf.nn.dropout(outputs,keep_prob=self.keep_prob)
     # softmax_w = tf.get_variable("softmax_w", [self.size, self.num_classes], dtype=tf.float32)
