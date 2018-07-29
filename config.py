@@ -6,7 +6,7 @@ config = {
     'max_max_epoch':40,
     'max_grad_norm': 5,
     'num_layers': 1,
-    'num_steps': 200,
+    'num_steps': 400,
     'embed_size': 100,
     'hidden_size':100,
     'keep_prob': 0.5,
@@ -15,5 +15,6 @@ config = {
     'vocab_size': 40000,
     'combine_mode': 'last',
     'weight_decay': 1e-8,
-    'save_path': 'checkpoint/imdb/'
+    'save_path': 'checkpoint/imdb/',
+    'num_buckets':10
 }

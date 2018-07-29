@@ -6,3 +6,4 @@ data/*
 saved_models/*
 checkpoint
 *.tfrecord*
+*.npz

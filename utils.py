@@ -257,8 +257,8 @@ class BucketedSequence(utils.Sequence):
         print('Training with %d non-empty buckets' % num_actual)
         #print(bucket_seqlen)
         #print(actual_bucketsizes)
-        self.bins = [(np.ndarray([bs, bsl] + list(input_shape), dtype=x_seq.dtype),
-                      np.ndarray([bs] + list(output_shape), dtype=y.dtype))
+        self.bins = [(np.zeros([bs, bsl] + list(input_shape), dtype=x_seq.dtype),
+                      np.zeros([bs] + list(output_shape), dtype=y.dtype))
                      for bsl,bs in zip(bucket_seqlen, actual_bucketsizes)]
         assert len(self.bins) == num_actual
 
@@ -276,7 +276,7 @@ class BucketedSequence(utils.Sequence):
         self.num_samples = x_seq.shape[0]
         self.dataset_len = int(sum([math.ceil(bs / self.batch_size)
                                     for bs in actual_bucketsizes]))
-        self._permute()
+        # self._permute()
 
     def _permute(self):
         # Shuffle bins
@@ -284,7 +284,9 @@ class BucketedSequence(utils.Sequence):
 
         # Shuffle bin contents
         for i, (xbin, ybin) in enumerate(self.bins):
+            print(xbin.shape[0])
             index_array = np.random.permutation(xbin.shape[0])
+            print(index_array)
             self.bins[i] = (xbin[index_array], ybin[index_array])
 
     def on_epoch_end(self):
@@ -307,7 +309,6 @@ class BucketedSequence(utils.Sequence):
 
             # Found bin
             idx_end = min(xbin.shape[0], idx_end) # Clamp to end of bin
-
             return xbin[idx_begin:idx_end].squeeze(), ybin[idx_begin:idx_end].squeeze()
 
 

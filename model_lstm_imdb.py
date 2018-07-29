@@ -121,14 +121,16 @@ class Trainer(object):
                                 X, y, test_size=0.5, random_state=12,shuffle=True)
         seq_len_train = np.sum((self.X_train > 0).astype(np.int32),-1)
         seq_len_test = np.sum((self.X_test > 0).astype(np.int32),-1)
-        self.bucketed_sequence_train = BucketedSequence(num_buckets=10,\
+        self.bucketed_sequence_train = BucketedSequence(num_buckets=config['num_buckets'],\
                                                 batch_size=config['batch_size'],\
                                                 seq_lengths=seq_len_train,\
                                                 x_seq=self.X_train, y=self.y_train)
-        self.bucketed_sequence_test = BucketedSequence(num_buckets=10,\
+        self.bucketed_sequence_test = BucketedSequence(num_buckets=config['num_buckets'],\
                                                 batch_size=config['batch_size'],\
                                                 seq_lengths=seq_len_test,\
                                                 x_seq=self.X_test, y=self.y_test)
+        # self.bucketed_sequence_train = None
+        # self.bucketed_sequence_test = None
         self.keep_prob = config['keep_prob']
         self.batch_size = config['batch_size']
         self.model = LSTMModel(config,embedding)
@@ -155,11 +157,12 @@ class Trainer(object):
             train_cost, train_accuracy = self.run_epoch(self.X_train,self.y_train,\
                                                     training=True,\
                                                 bucketed_sequence=self.bucketed_sequence_train)
-            self.bucketed_sequence_train.on_epoch_end()
+
             # print('Cost %0:.2f , Accuracy: 0:.2f'.format(cost,accuracy))
             val_cost, val_accuracy = self.run_epoch(self.X_test,self.y_test,\
                                                 bucketed_sequence=self.bucketed_sequence_test)
-            self.bucketed_sequence_test.on_epoch_end()
+            # self.bucketed_sequence_train.on_epoch_end()
+            # self.bucketed_sequence_test.on_epoch_end()
             cost_history.append(val_cost)
             print('BATCH %d |Training: Cost %f , Accuracy: %f  | Validation: Cost %f , Accuracy: %f ' \
                             %(idx, round(train_cost,2),round(train_accuracy*100,2),\
@@ -178,6 +181,7 @@ class Trainer(object):
         temp_acc   = []
         feed_dict  = {self.model.keep_prob: 1}
         ops        = [self.model.cost, self.model.predict]
+        y_true = []
         if training:
             feed_dict[self.model.keep_prob] = self.keep_prob
             ops = [self.train_op,self.model.cost, self.model.predict]
@@ -185,24 +189,24 @@ class Trainer(object):
             for i in trange(int(len(X)/self.batch_size)+1):
                 X_sub = X[i*self.batch_size: (i+1)*self.batch_size,:]
                 y_sub = y[i*self.batch_size: (i+1)*self.batch_size]
+                y_true.append(y_sub)
                 feed_dict[self.model.input] = X_sub
                 feed_dict[self.model.target] = y_sub
                 ops_out = self.sess.run(ops,feed_dict)
                 temp_cost.append(ops_out[-2])
                 temp_acc.append( ops_out[-1] )
-                acc = accuracy_score(y_pred=temp_acc[-1],y_true=y_sub)
         else:
             for i in trange(len(bucketed_sequence)):
                 X_sub, y_sub  = bucketed_sequence[i]
+                y_true.append(y_sub)
                 feed_dict[self.model.input] = X_sub
                 feed_dict[self.model.target] = y_sub
                 ops_out = self.sess.run(ops,feed_dict)
                 temp_cost.append(ops_out[-2])
                 temp_acc.append( ops_out[-1] )
-                acc = accuracy_score(y_pred=temp_acc[-1],y_true=y_sub)
         cost = np.mean(temp_cost)
         # print(classification_report(y_pred=self.predict(X),y_true=y))
-        accuracy = accuracy_score(y_pred=np.concatenate(temp_acc),y_true=y)
+        accuracy = accuracy_score(y_pred=np.concatenate(temp_acc),y_true=np.concatenate(y_true,axis=-1))
         return cost, accuracy
 
     def predict(self,X):
@@ -259,7 +263,8 @@ if __name__ == '__main__':
         x_train , y_train    = data_processor.get_training_data()
         x_test, y_test = data_processor.process_test_file( 'data/imdb/test.csv',contains_label=True,header=0)
         # embedding = data_processor.get_embedding(config['embed_size'])
-        # print('Embedding Shape',embedding.shape)
+    #     # print('Embedding Shape',embedding.shape)
+
     trainer = Trainer(config,x_train,y_train,embedding=None)
     trainer.train()
     trainer.load_best_model()
