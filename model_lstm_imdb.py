@@ -155,11 +155,11 @@ class Trainer(object):
             train_cost, train_accuracy = self.run_epoch(self.X_train,self.y_train,\
                                                     training=True,\
                                                 bucketed_sequence=self.bucketed_sequence_train)
-            self.self.bucketed_sequence_train.on_epoch_end()
+            self.bucketed_sequence_train.on_epoch_end()
             # print('Cost %0:.2f , Accuracy: 0:.2f'.format(cost,accuracy))
             val_cost, val_accuracy = self.run_epoch(self.X_test,self.y_test,\
                                                 bucketed_sequence=self.bucketed_sequence_test)
-            self.self.bucketed_sequence_test.on_epoch_end()
+            self.bucketed_sequence_test.on_epoch_end()
             cost_history.append(val_cost)
             print('BATCH %d |Training: Cost %f , Accuracy: %f  | Validation: Cost %f , Accuracy: %f ' \
                             %(idx, round(train_cost,2),round(train_accuracy*100,2),\
