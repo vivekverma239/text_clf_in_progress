@@ -268,7 +268,7 @@ class BucketedSequence(utils.Sequence):
             for j in range(num_actual):
                 bsl = bucket_seqlen[j]
                 if sl < bsl or j == num_actual - 1:
-                    self.bins[j][0][bctr[j],:bsl] = x_seq[i,-bsl:]
+                    self.bins[j][0][bctr[j],:bsl] = x_seq[i,-bsl:].reshape((bsl,1))
                     self.bins[j][1][bctr[j],:] = y[i]
                     bctr[j] += 1
                     break
@@ -308,7 +308,7 @@ class BucketedSequence(utils.Sequence):
             # Found bin
             idx_end = min(xbin.shape[0], idx_end) # Clamp to end of bin
 
-            return xbin[idx_begin:idx_end], ybin[idx_begin:idx_end]
+            return xbin[idx_begin:idx_end].squeeze(), ybin[idx_begin:idx_end].squeeze()
 
 
         raise ValueError('out of bounds')

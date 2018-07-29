@@ -10,7 +10,7 @@ from __future__ import print_function
 from utils import DataProcessor
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
-from utils import DataProcessor, imdb_for_library
+from utils import DataProcessor, imdb_for_library, BucketedSequence
 from sklearn.metrics import classification_report, accuracy_score
 import numpy as np
 # from encoder import LSTMEncoderWithEmbedding, CNNEncoderWithEmbedding
@@ -27,7 +27,7 @@ import sys
 class LSTMModel(object):
 
   def __init__(self, config, pretrained_embedding):
-    self._input         = tf.placeholder(dtype=tf.int32,shape=[None,config['num_steps']],name='input')
+    self._input         = tf.placeholder(dtype=tf.int32,shape=[None,None],name='input')
     self._target        = tf.placeholder(dtype=tf.int32,shape=[None],name='target')
     self.batch_size     = config['batch_size']
     self.num_steps      = config['num_steps']
@@ -119,7 +119,16 @@ class Trainer(object):
     def __init__(self,config,X,y,embedding):
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
                                 X, y, test_size=0.5, random_state=12,shuffle=True)
-
+        seq_len_train = np.sum((self.X_train > 0).astype(np.int32),-1)
+        seq_len_test = np.sum((self.X_test > 0).astype(np.int32),-1)
+        self.bucketed_sequence_train = BucketedSequence(num_buckets=10,\
+                                                batch_size=config['batch_size'],\
+                                                seq_lengths=seq_len_train,\
+                                                x_seq=self.X_train, y=self.y_train)
+        self.bucketed_sequence_test = BucketedSequence(num_buckets=10,\
+                                                batch_size=config['batch_size'],\
+                                                seq_lengths=seq_len_test,\
+                                                x_seq=self.X_test, y=self.y_test)
         self.keep_prob = config['keep_prob']
         self.batch_size = config['batch_size']
         self.model = LSTMModel(config,embedding)
@@ -143,9 +152,14 @@ class Trainer(object):
             if idx >= self.max_epoch :
                 self.lr *=self.lr_decay
                 self.model.assign_lr(self.sess,self.lr)
-            train_cost, train_accuracy = self.run_epoch(self.X_train,self.y_train, training=True)
+            train_cost, train_accuracy = self.run_epoch(self.X_train,self.y_train,\
+                                                    training=True,\
+                                                bucketed_sequence=self.bucketed_sequence_train)
+            self.self.bucketed_sequence_train.on_epoch_end()
             # print('Cost %0:.2f , Accuracy: 0:.2f'.format(cost,accuracy))
-            val_cost, val_accuracy = self.run_epoch(self.X_test,self.y_test)
+            val_cost, val_accuracy = self.run_epoch(self.X_test,self.y_test,\
+                                                bucketed_sequence=self.bucketed_sequence_test)
+            self.self.bucketed_sequence_test.on_epoch_end()
             cost_history.append(val_cost)
             print('BATCH %d |Training: Cost %f , Accuracy: %f  | Validation: Cost %f , Accuracy: %f ' \
                             %(idx, round(train_cost,2),round(train_accuracy*100,2),\
@@ -159,7 +173,7 @@ class Trainer(object):
                 break
 
 
-    def run_epoch(self,X,y, training=False):
+    def run_epoch(self,X,y, training=False,bucketed_sequence=None):
         temp_cost  = []
         temp_acc   = []
         feed_dict  = {self.model.keep_prob: 1}
@@ -167,15 +181,25 @@ class Trainer(object):
         if training:
             feed_dict[self.model.keep_prob] = self.keep_prob
             ops = [self.train_op,self.model.cost, self.model.predict]
-        for i in trange(int(len(X)/self.batch_size)+1):
-            X_sub = X[i*self.batch_size: (i+1)*self.batch_size,:]
-            y_sub = y[i*self.batch_size: (i+1)*self.batch_size]
-            feed_dict[self.model.input] = X_sub
-            feed_dict[self.model.target] = y_sub
-            ops_out = self.sess.run(ops,feed_dict)
-            temp_cost.append(ops_out[-2])
-            temp_acc.append( ops_out[-1] )
-            acc = accuracy_score(y_pred=temp_acc[-1],y_true=y_sub)
+        if not bucketed_sequence:
+            for i in trange(int(len(X)/self.batch_size)+1):
+                X_sub = X[i*self.batch_size: (i+1)*self.batch_size,:]
+                y_sub = y[i*self.batch_size: (i+1)*self.batch_size]
+                feed_dict[self.model.input] = X_sub
+                feed_dict[self.model.target] = y_sub
+                ops_out = self.sess.run(ops,feed_dict)
+                temp_cost.append(ops_out[-2])
+                temp_acc.append( ops_out[-1] )
+                acc = accuracy_score(y_pred=temp_acc[-1],y_true=y_sub)
+        else:
+            for i in trange(len(bucketed_sequence)):
+                X_sub, y_sub  = bucketed_sequence[i]
+                feed_dict[self.model.input] = X_sub
+                feed_dict[self.model.target] = y_sub
+                ops_out = self.sess.run(ops,feed_dict)
+                temp_cost.append(ops_out[-2])
+                temp_acc.append( ops_out[-1] )
+                acc = accuracy_score(y_pred=temp_acc[-1],y_true=y_sub)
         cost = np.mean(temp_cost)
         # print(classification_report(y_pred=self.predict(X),y_true=y))
         accuracy = accuracy_score(y_pred=np.concatenate(temp_acc),y_true=y)
@@ -186,7 +210,13 @@ class Trainer(object):
         feed_dict  = {self.model.keep_prob: 1}
         ops        = [self.model.predict]
 
-        for i in range(int(len(X)/self.batch_size)+1):
+        # for i in range(int(len(X)/self.batch_size)+1):
+        #     X_sub = X[i*self.batch_size: (i+1)*self.batch_size,:]
+        #     feed_dict[self.model.input] = X_sub
+        #     ops_out = self.sess.run(ops,feed_dict)
+        #     temp_pred.append(ops_out[0])
+
+        for i in range(int(len(X))):
             X_sub = X[i*self.batch_size: (i+1)*self.batch_size,:]
             feed_dict[self.model.input] = X_sub
             ops_out = self.sess.run(ops,feed_dict)
