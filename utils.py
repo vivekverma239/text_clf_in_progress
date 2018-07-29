@@ -268,7 +268,7 @@ class BucketedSequence(utils.Sequence):
             for j in range(num_actual):
                 bsl = bucket_seqlen[j]
                 if sl < bsl or j == num_actual - 1:
-                    self.bins[j][0][bctr[j],:bsl] = x_seq[i,-bsl:].reshape((bsl,1))
+                    self.bins[j][0][bctr[j],-bsl:] = x_seq[i,-bsl:].reshape((bsl,1))
                     self.bins[j][1][bctr[j],:] = y[i]
                     bctr[j] += 1
                     break

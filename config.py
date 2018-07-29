@@ -7,14 +7,14 @@ config = {
     'max_grad_norm': 5,
     'num_layers': 1,
     'num_steps': 400,
-    'embed_size': 100,
-    'hidden_size':100,
-    'keep_prob': 0.5,
+    'embed_size': 300,
+    'hidden_size':300,
+    'keep_prob': 0.45,
     'batch_size': 32,
     'num_classes': 2,
-    'vocab_size': 40000,
+    'vocab_size': 80000,
     'combine_mode': 'last',
-    'weight_decay': 1e-8,
+    'weight_decay': 0e-8,
     'save_path': 'checkpoint/imdb/',
-    'num_buckets':10
+    'num_buckets':1
 }
