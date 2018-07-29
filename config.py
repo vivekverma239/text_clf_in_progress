@@ -9,12 +9,12 @@ config = {
     'num_steps': 400,
     'embed_size': 300,
     'hidden_size':300,
-    'keep_prob': 0.45,
+    'keep_prob': 0.3,
     'batch_size': 32,
     'num_classes': 2,
     'vocab_size': 80000,
-    'combine_mode': 'last',
-    'weight_decay': 0e-8,
+    'combine_mode': 'weight',
+    'weight_decay': 1e-6,
     'save_path': 'checkpoint/imdb/',
     'num_buckets':1
 }

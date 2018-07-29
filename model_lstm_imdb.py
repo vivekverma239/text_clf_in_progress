@@ -15,7 +15,7 @@ from sklearn.metrics import classification_report, accuracy_score
 import numpy as np
 # from encoder import LSTMEncoderWithEmbedding, CNNEncoderWithEmbedding
 from keras.layers import Dense, Embedding
-from keras.layers import LSTM, GRU, CuDNNLSTM, CuDNNGRU, Dropout
+from keras.layers import LSTM, GRU, CuDNNLSTM, CuDNNGRU, Dropout, Bidirectional
 
 from tqdm import tqdm, trange
 from time import sleep
@@ -50,14 +50,35 @@ class LSTMModel(object):
 
     embed = Embedding(config['vocab_size']+1, self.embed_size)(self._input)
     outputs = tf.nn.dropout(embed,keep_prob=self.keep_prob)
-    output = CuDNNLSTM(self.size)(embed)
-    outputs = tf.nn.dropout(output,keep_prob=self.keep_prob)
+    # outputs = Bidirectional(CuDNNLSTM(self.size,return_sequences=True))(outputs)
+    # outputs = tf.nn.dropout(outputs,keep_prob=self.keep_prob)
+    outputs = Bidirectional(CuDNNLSTM(self.size,return_sequences=True))(outputs)
+
+    if self.combine_mode =='weight':
+        outputs = tf.reshape(outputs,[-1,self.size])
+        weights = Dense(1,activation='tanh')(outputs)
+        outputs = tf.multiply(outputs,weights)
+        outputs = tf.reshape(outputs,[-1,self.num_steps,2*self.size])
+        outputs = tf.reduce_sum(outputs,axis=1)
+    elif self.combine_mode =='last':
+        outputs = outputs[:,-1,:]
+    elif self.combine_mode =='all':
+        weights = Dense(1,activation='tanh')(outputs)
+        outputs_weighted = tf.multiply(outputs,weights)
+        outputs_weighted = tf.reshape(outputs_weighted,[-1,self.num_steps,2*self.size])
+        outputs_weighted = tf.reduce_sum(outputs_weighted,axis=1)
+        outputs_last = outputs[:,-1,:]
+        outputs_mean = tf.reduce_mean(outputs,axis=1)
+        outputs_max  = tf.reduce_max(outputs,axis=1)
+        outputs_min  = tf.reduce_min(outputs,axis=1)
+        outputs = tf.concat([outputs_last,outputs_mean,outputs_max,outputs_min,outputs_weighted],axis=-1)
+    outputs = tf.nn.dropout(outputs,keep_prob=self.keep_prob)
 
     embed_avg = tf.reduce_mean(embed,axis=1)
-    # embed_max = tf.reduce_max(embed,axis=1)
-    # embed_min = tf.reduce_min(embed,axis=1)
-    # outputs = tf.concat([outputs,embed_avg,embed_min,embed_max],axis=-1)
-    outputs = tf.concat([outputs,embed_avg],axis=-1)
+    embed_max = tf.reduce_max(embed,axis=1)
+    embed_min = tf.reduce_min(embed,axis=1)
+    outputs = tf.concat([outputs,embed_avg,embed_min,embed_max],axis=-1)
+    # outputs = tf.concat([outputs,embed_avg]   ,axis=-1)
     # outputs = tf.contrib.layers.fully_connected(outputs,self.size)
     # outputs = tf.nn.dropout(outputs,keep_prob=self.keep_prob)
     # softmax_w = tf.get_variable("softmax_w", [self.size, self.num_classes], dtype=tf.float32)

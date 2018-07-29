@@ -54,15 +54,17 @@ class LSTMModel(object):
     outputs = tf.nn.dropout(output,keep_prob=self.keep_prob)
 
     embed_avg = tf.reduce_mean(embed,axis=1)
-    # embed_max = tf.reduce_max(embed,axis=1)
-    # embed_min = tf.reduce_min(embed,axis=1)
-    # outputs = tf.concat([outputs,embed_avg,embed_min,embed_max],axis=-1)
-    outputs = tf.concat([outputs,embed_avg],axis=-1)
+    embed_max = tf.reduce_max(embed,axis=1)
+    embed_min = tf.reduce_min(embed,axis=1)
+    outputs = tf.concat([outputs,embed_avg,embed_min,embed_max],axis=-1)
+    # outputs = tf.concat([outputs,embed_avg],axis=-1)
     # outputs = tf.contrib.layers.fully_connected(outputs,self.size)
     # outputs = tf.nn.dropout(outputs,keep_prob=self.keep_prob)
     # softmax_w = tf.get_variable("softmax_w", [self.size, self.num_classes], dtype=tf.float32)
     # softmax_b = tf.get_variable("softmax_b", [self.num_classes], dtype=tf.float32)
     # logits    = tf.matmul(outputs, softmax_w) + softmax_b
+
+    outputs = Dense(30,activation='relu')(outputs)
     logits = Dense(self.num_classes,activation=None)(outputs)
 
 
