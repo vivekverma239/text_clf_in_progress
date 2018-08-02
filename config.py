@@ -1,6 +1,6 @@
 config = {
     'init_scale': 0.1,
-    'lr': .001,
+    'lr': 0.001,
     'lr_decay': 0.8,
     'max_epoch':7,
     'max_max_epoch':40,
@@ -14,7 +14,7 @@ config = {
     'num_classes': 2,
     'vocab_size': 80000,
     'combine_mode': 'weight',
-    'weight_decay': 1e-6,
-    'save_path': 'checkpoint/imdb/',
-    'num_buckets':1
+    'weight_decay': 0e-5,
+    'num_buckets':1,
+    'save_path': 'checkpoint/imdb/'
 }
